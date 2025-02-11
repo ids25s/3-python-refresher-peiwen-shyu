@@ -1,0 +1,277 @@
+---
+title: "HW 3"
+author: "Peiwen Xu"
+toc: true
+number-sections: true
+highlight-style: pygments
+format: 
+  html: 
+    code-fold: true
+    html-math-method: katex
+  pdf: 
+    geometry: 
+      - top=30mm
+      - left=20mm
+---
+\newpage
+# Monty Hall 
+##  Write a function to simulate the experiment once. 
+The functiontakes two arguments `ndoors` and `nempty`, which represent the
+number of doors and the number of empty doors showed by the host,
+respectively, It returns the result of two strategies, switch and
+no-switch, from playing this game. 
+```{python}
+import random
+
+def simulator(ndoor, nempty, mdoor):
+    '''
+    Simulate Monty Hall problem once.
+
+    arguments:
+        ndoor: number of doors
+        nempty: number of empty doors
+        mdoor: number of doors opened by the host
+
+    returns:
+        result tuple: 
+            (i,s) where i & s are 0 or 1, 
+            i is 1 iff initial choice wins, 
+            and s is 1 of iff choice after switch wins
+        
+    iff stands for "if and only if" 
+    '''
+
+    # randomly select nempty door, and set it to 0
+    doors_index = [i for i in range(ndoor)]
+    doors = {i: 1 for i in doors_index}
+    empty_indices = random.sample(doors_index, nempty)
+    empty_indices.sort()
+    for i in empty_indices:
+        doors[i] = 0
+
+    # the contestant selects a door randomly
+    initial_choice = random.randint(0, ndoor - 1)
+    
+    # the host opens mdoor <= nempty-1 of the empty doors
+    # the host will not open the door selected by the contestant
+    doors_host_open = []
+    doors_host_selectable = [i for i in empty_indices if i != initial_choice]
+    # randomly select mdoor doors from doors_selectable
+    doors_host_open = random.sample(doors_host_selectable, mdoor)
+
+    # record the initial choice wins or not
+    if doors[initial_choice] == 1:
+        initial = True
+    else:
+        initial = False
+
+    # delete the doors opened by the host
+    doors_selectable = [i for i in doors_index if \
+                        i != initial_choice and i not in doors_host_open]
+    # random select one door number from doors_selectable
+    switched_choice = random.choice(doors_selectable)
+
+    if doors[switched_choice] == 1:
+        switch = True
+    else:
+        switch = False
+
+    print("\ninitial choice wins:", initial, 
+          "\nchoice after switch wins:", switch)
+
+    return (initial, switch)
+```
+
+## Play this game with 3 doors and 1 empty a few times.
+
+```{python}
+simulator(3, 2, 1)
+```
+```{python}
+simulator(3, 2, 1)
+```
+
+##  Play this game with 10 doors and 8 empty a few times.
+
+```{python}
+simulator(10, 9, 8)
+```
+```{python}
+simulator(10, 9, 8)
+```
+
+##  Write a function to demonstrate the Monty Hall problem through simulation.
+The function takes three arguments `ndoors`, `nempty`,and  `ntrials`, 
+where `ntrial` isthe number of trials in a simulation. The function should 
+return the proportion of wins for both the switch and no-switch strategy. 
+
+```{python}
+def multi_times_simulator(ndoor, nempty, mdoor,ntrial=1000):
+    '''
+    Simulate Monty Hall problem ntrial times, and record the 
+    frequency of initial choice wins and choice after switch wins
+
+    arguments:
+        ndoor: number of doors
+        nempty: number of empty doors
+        mdoor: number of doors opened by the host
+
+    returns:
+        result tuple: (i,s) 
+            where i & s stand for the frequency of initial choice wins 
+            and choice after switch wins, respectively
+        
+    iff stands for "if and only if" 
+    '''
+
+    # record the times of initial choice wins and choice after switch wins
+    initial_win_times = 0
+    switch_win_times = 0
+
+    
+    # randomly select nempty door, and set it to 0
+    doors_index = [i for i in range(ndoor)]
+    doors = {i: 1 for i in doors_index}
+    empty_indices = random.sample(doors_index, nempty)
+    empty_indices.sort()
+    for i in empty_indices:
+        doors[i] = 0
+    print("number of doors:", ndoor, 
+          "\nnumber of empty doors:", nempty, 
+          "\nnumber of doors opened by the host:", mdoor)
+    print("\nempty doors:", empty_indices)
+
+    # simulate ntrial times
+    for i in range(ntrial):
+        # the contestant selects a door randomly
+        initial_choice = random.randint(0, ndoor - 1)
+        # the host opens mdoor of the empty doors 
+        # the host will not open the door selected by the contestant
+        doors_host_open = []
+        doors_host_selectable = [i for i in empty_indices if i != initial_choice]
+        # randomly select mdoor doors from doors_selectable
+        doors_host_open = random.sample(doors_host_selectable, mdoor)
+
+        # if initial choice wins, record it by adding 1 to initial_win_times
+        if doors[initial_choice] == 1:
+            initial_win_times += 1
+
+        # delete the doors host opened from doors
+        doors_selectable = [i for i in doors_index if \
+                            i != initial_choice and i not in doors_host_open]
+        # random choose a door number in doors_selectable
+        switched_choice = random.choice(doors_selectable)
+        # if choice after switch wins, record it by adding 1 to switch_win_times
+        if doors[switched_choice] == 1:
+            switch_win_times += 1
+
+    initial = initial_win_times/ntrial
+    switch = switch_win_times/ntrial
+    
+    print("\nthe frequency of initial choice wins:", initial, 
+          "\nthe frequency of choice after switch wins:", switch)
+
+    return (initial, switch)
+```
+
+##  Apply your function with 3 doors (1 empty) and 10 doors (8 empty).
+Both with 1000 trials. Summarize your results.
+
+```{python}
+multi_times_simulator(3, 2, 1, ntrial=1000)
+```
+```{python}
+multi_times_simulator(10, 9, 8, ntrial=1000)
+```
+
+**Summary:**
+
+1. The proportion of wins for both the switch and no-switch strategy are:
+- (ndoor,nempty,mdoor)==(3,2,1): 
+initial choice wins: 0.333, choice after switch wins: 0.667.
+- (ndoor,nempty,mdoor)==(10,9,8): 
+initial choice wins: 0.1, choice after switch wins: 0.9.
+
+2. In general cases:
+- the probability of initial choice wins is `(ndoor-nempty) / ndoor`.
+- the probability of choice after switch wins is `(ndoor-nempty+mdoor) / ndoor`.
+
+\newpage
+# Game 24
+##  List All Possible Groupings of Numbers and Operators
+Consider all valid ways to group 4 numbers using parentheses 
+and operations (`+`, `-`, `*`, `/`).  
+There are the 5 distinct grouping structures:
+
+1. **Binary Tree Structures**:
+- **Type 1**: `((a op b) op c) op d`
+Example: `((2 + 3) * 4) - 1`
+- **Type 2**: `(a op (b op c)) op d`
+Example: `(6 * (5 - 2)) / 3`
+- **Type 3**: `a op ((b op c) op d)`
+Example: `8 / ((3 - 1) * 2)`
+- **Type 4**: `a op (b op (c op d))`
+Example: `4 * (3 + (2 * 1))`
+- **Type 5**: `(a op b) op (c op d)`
+Example: `(9 - 3) * (5 - 1)`
+
+Each structure allows permutations of the 4 numbers 
+and combinations of operators.
+
+
+## Number of Ways to Check for a Solution
+We need to consider permutations of the numbers, combinations of operators, 
+and the distinct grouping structures.
+
+1. **Permutations of 4 numbers**:
+\(4! = 24\) ways.
+
+2. **Operator Combinations**:
+For 3 operator slots (since 4 numbers require 3 operations), 
+each slot can use `+`, `-`, `*`, or `/`:
+\(4^3 = 64\) combinations.
+
+3. **Grouping Structures**:
+5 distinct structures (from Task 1).
+
+**Total Combinations**:
+\(4! \times 4^3 \times 5 = 24 \times 64 \times 5 = 7680\) ways.
+
+
+## Function to Solve the Problem
+
+```{python}
+from itertools import permutations, product
+
+def solve_24(nums):
+    ops = ['+', '-', '*', '/']
+    solutions = []
+    structures = [
+        "(({0} {4} {1}) {5} {2}) {6} {3}",
+        "({0} {4} ({1} {5} {2})) {6} {3}",
+        "{0} {4} (({1} {5} {2}) {6} {3})",
+        "{0} {4} ({1} {5} ({2} {6} {3}))",
+        "({0} {4} {1}) {5} ({2} {6} {3})"
+    ]
+    
+    for perm in permutations(nums):
+        a, b, c, d = map(str, perm)
+        for op1, op2, op3 in product(ops, repeat=3):
+            for struct in structures:
+                expr = struct.format(a, b, c, d, op1, op2, op3)
+                try:
+                    if abs(eval(expr) - 24) < 1e-6:
+                        solutions.append(expr)
+                except ZeroDivisionError:
+                    continue
+    return list(set(solutions))  
+
+
+print(solve_24([3, 3, 8, 8]))  
+```
+
+**Notes**:
+
+1. The function avoids division by zero.
+2. Floating-point precision is handled with a tolerance of \(1 \times 10^{-6}\).
+3. Duplicate solutions (due to commutative operations) are removed.
